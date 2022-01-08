@@ -5,7 +5,11 @@ output:
     keep_md: yes
 ---
 
-
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      fig.height = 5,
+                      fig.height = 6)
+```
 
 ## sources
 
@@ -28,8 +32,7 @@ Latest Denmark Omicron report from https://covid19.ssi.dk/virusvarianter/omikron
 
 If you are wanting to use updated data relative to this version, download deaths for Q4 2021, and any 2022 deaths and put them in the statbank_dk_deaths_day folder. If there is 2022 Population data, downland 2010-2022 quarterly populations and replace the file in the other_data folder. Download the latests ourworldindata dataset.
 
-
-```r
+```{r libraries, message=FALSE, warning=FALSE}
 library(dplyr)
 library(readr)
 library(lubridate)
@@ -39,8 +42,7 @@ library(ggplot2)
 library(ggthemes)
 ```
 
-
-```r
+```{r helpers}
 # Colourset
 six_cols <- colorblind_pal()(6)
 
@@ -70,8 +72,7 @@ six_cols <- colorblind_pal()(6)
 ```
 
 
-
-```r
+```{r data_loader, warning=FALSE, message=FALSE}
 # Deaths
 daily_death_csvs <- list.files("statbank_dk_deaths_day", pattern = "csv$",
                                full.names = TRUE)
@@ -130,8 +131,7 @@ owdDNK <- read_csv("other_data/owid-covid-data_2022_01_07.csv",
 
 Joining Data together
 
-
-```r
+```{r}
 dnk <- daily_deaths %>% 
   left_join(quarter_pop, by = c("Age", "DateDt")) %>%
   arrange(Age, DateDt) %>%
@@ -139,14 +139,14 @@ dnk <- daily_deaths %>%
   fill(Population) %>%
   ungroup() %>%
   left_join(owdDNK, by = c("Age", "DateDt")) 
+  
 ```
 
 Example  of usage: raw deaths per 100,000
 
 This alarms me if the mortality rate for the year since May 2021 is higher than 2020, it would be consistent with the recent insurance industry work on long covid, but it also means our conceptions of "getting better" are drastically and dangerously wrong. And our incentives to not catch it at all are seriously underestimated. 
 
-
-```r
+```{r}
 dnk %>% 
   filter(Age == "Total") %>%
   arrange(DateDt) %>%
@@ -169,17 +169,10 @@ dnk %>%
   annotate("text", x=ymd("2020-12-21"), y=3.39, label="2021 still\nmay be\nrevised up",vjust=1)
 ```
 
-```
-## Warning: Removed 6 row(s) containing missing values (geom_path).
-```
-
-![](README_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
-
 Example  of usage: Deaths per 100,000 as percent of 2010-19 mean, which is just as bad. 
 
 
-
-```r
+```{r}
 historic_mean <- dnk %>% 
   filter(Age == "Total") %>%
   arrange(DateDt) %>%
@@ -219,13 +212,9 @@ dnk %>%
   annotate("line", x=ymd(c("2020-12-15", "2020-12-31")),
            y=c(125,125)) +
   annotate("text", x=ymd("2020-12-21"), y=124, label="2021 still\nmay be\nrevised up",vjust=1)
-```
 
+  
 ```
-## Warning: Removed 12 row(s) containing missing values (geom_path).
-```
-
-![](README_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
 
 
 
